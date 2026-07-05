@@ -1,0 +1,25 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno (¡nunca subir secretos!)
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Builds / temporales
+dist/
+coverage/
+tmp/
+
+# Documentación interna (no publicar en GitHub)
+/docs/
