@@ -11,6 +11,9 @@ const pool = new Pool({
   database: env.db.database,
   user: env.db.user,
   password: env.db.password,
+  // Algunas bases (hosting/Coolify) exigen SSL. rejectUnauthorized:false acepta
+  // certificados autofirmados, habitual en entornos gestionados.
+  ssl: env.db.ssl ? { rejectUnauthorized: false } : false,
 });
 
 pool.on('error', (err) => {
