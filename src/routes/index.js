@@ -10,9 +10,9 @@ router.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'sjmr-backend' });
 });
 
-// A medida que se desarrollen los módulos, se montarán aquí. Ejemplo:
-// router.use('/auth', require('./auth.routes'));
-// router.use('/usuarios', require('./usuario.routes'));
+// Módulos del sistema
+router.use('/auth', require('./auth.routes'));
+router.use('/usuarios', require('./usuario.routes'));
 // router.use('/comandas', require('./comanda.routes'));
 
 module.exports = router;
