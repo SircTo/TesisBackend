@@ -13,6 +13,8 @@ router.get('/health', (req, res) => {
 // Módulos del sistema
 router.use('/auth', require('./auth.routes'));
 router.use('/usuarios', require('./usuario.routes'));
+router.use('/zonas', require('./zona.routes'));
+router.use('/mesas', require('./mesa.routes'));
 // router.use('/comandas', require('./comanda.routes'));
 
 module.exports = router;
