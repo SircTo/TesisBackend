@@ -32,6 +32,27 @@ function query(text, params) {
 }
 
 /**
+ * Ejecuta una función dentro de una transacción. Recibe un `client` con el que
+ * deben hacerse todas las consultas de la transacción. Hace COMMIT si termina
+ * bien y ROLLBACK si algo falla.
+ * @param {(client: import('pg').PoolClient) => Promise<any>} callback
+ */
+async function withTransaction(callback) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const resultado = await callback(client);
+    await client.query('COMMIT');
+    return resultado;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * Verifica que la conexión a la base de datos funcione.
  * Se llama al arrancar el servidor.
  */
@@ -44,4 +65,4 @@ async function testConnection() {
   }
 }
 
-module.exports = { pool, query, testConnection };
+module.exports = { pool, query, withTransaction, testConnection };
