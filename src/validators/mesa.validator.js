@@ -47,4 +47,17 @@ function validarActualizar(body = {}) {
   return cambios;
 }
 
-module.exports = { validarCrear, validarActualizar };
+/**
+ * Valida el parámetro de consulta ?zona_id= para el filtro de listado.
+ * Devuelve el id (número) o undefined si no se envió.
+ */
+function validarFiltroZona(query = {}) {
+  if (query.zona_id === undefined) return undefined;
+  const zonaId = Number(query.zona_id);
+  if (!esEnteroPositivo(zonaId)) {
+    throw new ApiError(400, 'zona_id debe ser un entero positivo.');
+  }
+  return zonaId;
+}
+
+module.exports = { validarCrear, validarActualizar, validarFiltroZona };

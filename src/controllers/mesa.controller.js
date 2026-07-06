@@ -1,12 +1,12 @@
 'use strict';
 
 const mesaService = require('../services/mesa.service');
-const { validarCrear, validarActualizar } = require('../validators/mesa.validator');
+const { validarCrear, validarActualizar, validarFiltroZona } = require('../validators/mesa.validator');
 const asyncHandler = require('../utils/asyncHandler');
 
 // GET /api/mesas  (opcional ?zona_id=)
 const listar = asyncHandler(async (req, res) => {
-  const zonaId = req.query.zona_id ? Number(req.query.zona_id) : undefined;
+  const zonaId = validarFiltroZona(req.query);
   res.json(await mesaService.listar(zonaId));
 });
 
