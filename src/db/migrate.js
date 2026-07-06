@@ -37,7 +37,6 @@ async function run() {
       if (aplicadas.has(archivo)) continue;
 
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, archivo), 'utf8');
-      // eslint-disable-next-line no-console
       console.log(`[migrate] Aplicando ${archivo}...`);
 
       // Cada migración corre en su propia transacción: si falla, se revierte entera.
@@ -53,7 +52,6 @@ async function run() {
       }
     }
 
-    // eslint-disable-next-line no-console
     console.log(count === 0 ? '[migrate] No hay migraciones pendientes.' : `[migrate] ${count} migración(es) aplicada(s).`);
   } finally {
     client.release();
@@ -62,7 +60,6 @@ async function run() {
 }
 
 run().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error('[migrate] Error:', err.message);
   process.exit(1);
 });

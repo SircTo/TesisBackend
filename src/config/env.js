@@ -9,7 +9,6 @@ const REQUERIDAS = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', '
 
 const faltantes = REQUERIDAS.filter((clave) => !process.env[clave]);
 if (faltantes.length > 0) {
-  // eslint-disable-next-line no-console
   console.error(
     `[config] Faltan variables de entorno requeridas: ${faltantes.join(', ')}.\n` +
       'Crea un archivo .env basándote en .env.example.'

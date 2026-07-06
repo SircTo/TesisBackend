@@ -17,7 +17,6 @@ const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  // eslint-disable-next-line no-console
   console.error('[db] Error inesperado en el pool de PostgreSQL:', err.message);
 });
 

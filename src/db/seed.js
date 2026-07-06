@@ -41,13 +41,10 @@ async function seed() {
     );
 
     await client.query('COMMIT');
-    // eslint-disable-next-line no-console
     console.log('[seed] Datos iniciales insertados.');
-    // eslint-disable-next-line no-console
     console.log(`[seed] Admin -> correo: ${ADMIN_EMAIL} | contraseña: ${ADMIN_PASSWORD} (cámbiala pronto)`);
   } catch (err) {
     await client.query('ROLLBACK');
-    // eslint-disable-next-line no-console
     console.error('[seed] Error:', err.message);
     process.exitCode = 1;
   } finally {
