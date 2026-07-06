@@ -15,6 +15,9 @@ router.use('/auth', require('./auth.routes'));
 router.use('/usuarios', require('./usuario.routes'));
 router.use('/zonas', require('./zona.routes'));
 router.use('/mesas', require('./mesa.routes'));
+router.use('/categorias', require('./categoria.routes'));
+router.use('/productos', require('./producto.routes'));
+router.use('/avisos-stock', require('./avisoStock.routes'));
 // router.use('/comandas', require('./comanda.routes'));
 
 module.exports = router;
