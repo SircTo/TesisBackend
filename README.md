@@ -52,3 +52,14 @@ src/
    npm start
    ```
 5. Verificar que responde: `GET http://localhost:3000/api/health` → `{ "status": "ok" }`.
+
+## Pruebas
+
+Las pruebas usan **Jest** y **Supertest**. Son pruebas de la API (rutas, autenticación,
+autorización, validación y códigos de estado) con la **capa de modelos reemplazada por mocks**,
+por lo que **no requieren conexión a la base de datos** ni contaminan datos reales.
+
+```bash
+npm test
+```
+
