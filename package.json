@@ -8,7 +8,7 @@
     "dev": "nodemon src/server.js",
     "migrate": "node src/db/migrate.js",
     "seed": "node src/db/seed.js",
-    "test": "echo \"Sin pruebas aún\" && exit 0"
+    "test": "jest --forceExit"
   },
   "keywords": [
     "restaurante",
@@ -29,6 +29,8 @@
     "pg": "^8.11.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "jest": "^30.4.2",
+    "nodemon": "^3.1.0",
+    "supertest": "^7.2.2"
   }
 }
