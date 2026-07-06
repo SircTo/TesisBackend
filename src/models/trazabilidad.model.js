@@ -12,11 +12,19 @@ const { query } = require('../config/db');
  * @param {string|null} [datos.detalle]   Descripción libre
  */
 async function registrar({ usuarioId, accion, entidad, entidadId = null, detalle = null }) {
-  await query(
-    `INSERT INTO trazabilidad (usuario_id, accion, entidad, entidad_id, detalle)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [usuarioId, accion, entidad, entidadId, detalle]
-  );
+  // La trazabilidad es auxiliar: si su registro falla, se avisa por log pero
+  // NO se propaga el error, para no tumbar la operación principal que ya se realizó.
+  try {
+    await query(
+      `INSERT INTO trazabilidad (usuario_id, accion, entidad, entidad_id, detalle)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [usuarioId, accion, entidad, entidadId, detalle]
+    );
+  } catch (err) {
+    console.warn(
+      `[trazabilidad] No se pudo registrar "${accion}" sobre ${entidad}: ${err.message}`
+    );
+  }
 }
 
 module.exports = { registrar };
