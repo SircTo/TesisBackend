@@ -19,6 +19,6 @@ router.use('/categorias', require('./categoria.routes'));
 router.use('/productos', require('./producto.routes'));
 router.use('/avisos-stock', require('./avisoStock.routes'));
 router.use('/tipos-cliente', require('./tipoCliente.routes'));
-// router.use('/comandas', require('./comanda.routes'));
+router.use('/comandas', require('./comanda.routes'));
 
 module.exports = router;

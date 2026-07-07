@@ -47,4 +47,13 @@ async function actualizar(id, { numero, zonaId, estado }) {
   return rows[0] || null;
 }
 
-module.exports = { listar, buscarPorId, crear, actualizar };
+// Cambia solo el estado de la mesa (libre/ocupada/pagando). exec permite usarlo dentro de una transacción.
+async function cambiarEstado(id, estado, exec = query) {
+  const { rows } = await exec(
+    `UPDATE mesas SET estado = $2 WHERE id = $1 RETURNING ${CAMPOS}`,
+    [id, estado]
+  );
+  return rows[0] || null;
+}
+
+module.exports = { listar, buscarPorId, crear, actualizar, cambiarEstado };
