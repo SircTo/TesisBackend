@@ -20,5 +20,6 @@ router.use('/productos', require('./producto.routes'));
 router.use('/avisos-stock', require('./avisoStock.routes'));
 router.use('/tipos-cliente', require('./tipoCliente.routes'));
 router.use('/comandas', require('./comanda.routes'));
+router.use('/ventas', require('./venta.routes'));
 
 module.exports = router;
