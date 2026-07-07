@@ -23,3 +23,6 @@ tmp/
 
 # Documentación interna (no publicar en GitHub)
 /docs/
+
+# Serena (herramienta de asistencia; no publicar en GitHub)
+/.serena/
