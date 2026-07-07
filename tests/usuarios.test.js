@@ -56,6 +56,16 @@ describe('/api/usuarios', () => {
     expect(res.body.id).toBe(2);
   });
 
+  it('409 si un usuario intenta desactivar su propia cuenta', async () => {
+    // El token de ADMIN() tiene id 1; se intenta desactivar al propio usuario 1.
+    usuarioModel.buscarPorId.mockResolvedValue({ id: 1, nombre: 'Admin', correo: 'a@a.cl', rol: 'administrador', estado: 'activo' });
+    const res = await request(app)
+      .put('/api/usuarios/1')
+      .set('Authorization', ADMIN())
+      .send({ estado: 'inactivo' });
+    expect(res.status).toBe(409);
+  });
+
   it('409 si el correo ya existe', async () => {
     usuarioModel.buscarPorCorreo.mockResolvedValue({ id: 9, correo: 'j@j.cl' });
     const res = await request(app)

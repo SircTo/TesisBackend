@@ -55,6 +55,11 @@ async function obtener(id) {
 async function actualizar(id, datos, actorId) {
   await obtener(id); // lanza 404 si no existe
 
+  // Un usuario no puede desactivar su propia cuenta (evita autobloqueo del admin).
+  if (id === actorId && datos.estado === 'inactivo') {
+    throw new ApiError(409, 'No puedes desactivar tu propia cuenta.');
+  }
+
   const cambios = { nombre: datos.nombre, rol: datos.rol, estado: datos.estado };
   if (datos.password) cambios.passwordHash = await hashPassword(datos.password);
 
