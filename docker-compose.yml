@@ -1,0 +1,28 @@
+# Despliegue del backend en Coolify (una app "Docker Compose").
+# La base de datos es externa (PostgreSQL); se configura por variables de entorno.
+services:
+  backend:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSL: ${DB_SSL:-true}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    networks:
+      sjmr-network:
+        # Alias por el que el frontend (Nginx) alcanza al backend: http://backend:3000
+        aliases:
+          - backend
+
+# Red compartida entre backend y frontend (creada una vez, ver guía de despliegue).
+networks:
+  sjmr-network:
+    external: true
