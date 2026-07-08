@@ -1,4 +1,4 @@
-# Backend — Sociedad Juan Martínez de Rozas
+# Backend
 
 API REST para la aplicación de gestión del restaurante (registro de comandas, ventas e inventario).
 
