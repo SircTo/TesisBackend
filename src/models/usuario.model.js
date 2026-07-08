@@ -53,4 +53,11 @@ async function actualizar(id, { nombre, rol, estado, passwordHash }) {
   return rows[0] || null;
 }
 
-module.exports = { buscarPorCorreo, buscarPorId, listar, crear, actualizar };
+async function contarAdministradoresActivos() {
+  const { rows } = await query(
+    `SELECT COUNT(*)::int AS total FROM usuarios WHERE rol = 'administrador' AND estado = 'activo'`
+  );
+  return rows[0].total;
+}
+
+module.exports = { buscarPorCorreo, buscarPorId, listar, crear, actualizar, contarAdministradoresActivos };

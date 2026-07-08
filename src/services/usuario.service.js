@@ -53,11 +53,27 @@ async function obtener(id) {
 }
 
 async function actualizar(id, datos, actorId) {
-  await obtener(id); // lanza 404 si no existe
+  const existente = await obtener(id); // lanza 404 si no existe
 
-  // Un usuario no puede desactivar su propia cuenta (evita autobloqueo del admin).
-  if (id === actorId && datos.estado === 'inactivo') {
-    throw new ApiError(409, 'No puedes desactivar tu propia cuenta.');
+  // Un usuario no puede autobloquearse ni quitarse a sí mismo el rol de administrador.
+  if (id === actorId) {
+    if (datos.estado === 'inactivo') {
+      throw new ApiError(409, 'No puedes desactivar tu propia cuenta.');
+    }
+    if (datos.rol !== undefined && datos.rol !== existente.rol) {
+      throw new ApiError(409, 'No puedes cambiar tu propio rol.');
+    }
+  }
+
+  // Debe quedar siempre al menos un administrador activo en el sistema.
+  const eraAdminActivo = existente.rol === 'administrador' && existente.estado === 'activo';
+  const dejaDeSerAdminActivo =
+    datos.estado === 'inactivo' || (datos.rol !== undefined && datos.rol !== 'administrador');
+  if (eraAdminActivo && dejaDeSerAdminActivo) {
+    const activos = await usuarioModel.contarAdministradoresActivos();
+    if (activos <= 1) {
+      throw new ApiError(409, 'Debe existir al menos un administrador activo.');
+    }
   }
 
   const cambios = { nombre: datos.nombre, rol: datos.rol, estado: datos.estado };

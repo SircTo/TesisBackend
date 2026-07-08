@@ -66,6 +66,27 @@ describe('/api/usuarios', () => {
     expect(res.status).toBe(409);
   });
 
+  it('409 si un usuario intenta cambiar su propio rol', async () => {
+    usuarioModel.buscarPorId.mockResolvedValue({ id: 1, nombre: 'Admin', correo: 'a@a.cl', rol: 'administrador', estado: 'activo' });
+    const res = await request(app).put('/api/usuarios/1').set('Authorization', ADMIN()).send({ rol: 'garzon' });
+    expect(res.status).toBe(409);
+  });
+
+  it('409 al desactivar al último administrador activo', async () => {
+    usuarioModel.buscarPorId.mockResolvedValue({ id: 2, nombre: 'Otro', correo: 'o@o.cl', rol: 'administrador', estado: 'activo' });
+    usuarioModel.contarAdministradoresActivos.mockResolvedValue(1);
+    const res = await request(app).put('/api/usuarios/2').set('Authorization', ADMIN()).send({ estado: 'inactivo' });
+    expect(res.status).toBe(409);
+  });
+
+  it('200 al desactivar a un administrador cuando hay más de uno', async () => {
+    usuarioModel.buscarPorId.mockResolvedValue({ id: 2, nombre: 'Otro', correo: 'o@o.cl', rol: 'administrador', estado: 'activo' });
+    usuarioModel.contarAdministradoresActivos.mockResolvedValue(2);
+    usuarioModel.actualizar.mockResolvedValue({ id: 2, nombre: 'Otro', correo: 'o@o.cl', rol: 'administrador', estado: 'inactivo' });
+    const res = await request(app).put('/api/usuarios/2').set('Authorization', ADMIN()).send({ estado: 'inactivo' });
+    expect(res.status).toBe(200);
+  });
+
   it('409 si el correo ya existe', async () => {
     usuarioModel.buscarPorCorreo.mockResolvedValue({ id: 9, correo: 'j@j.cl' });
     const res = await request(app)
