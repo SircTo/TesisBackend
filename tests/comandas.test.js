@@ -131,6 +131,23 @@ describe('/api/comandas', () => {
     });
   });
 
+  describe('solicitar cuenta', () => {
+    it('200 marca la mesa como pagando para una comanda entregada', async () => {
+      comandaModel.buscarPorId.mockResolvedValue({ id: 1, mesa_id: 1, estado: 'entregada', descuento_tipo_cliente_porcentaje: null });
+      detalleModel.listarPorComanda.mockResolvedValue([]);
+      mesaModel.cambiarEstado.mockResolvedValue({ id: 1, estado: 'pagando' });
+      const res = await request(app).post('/api/comandas/1/solicitar-cuenta').set('Authorization', GARZON());
+      expect(res.status).toBe(200);
+      expect(mesaModel.cambiarEstado).toHaveBeenCalledWith(1, 'pagando');
+    });
+
+    it('409 si la comanda no está entregada', async () => {
+      comandaModel.buscarPorId.mockResolvedValue({ id: 1, mesa_id: 1, estado: 'abierta' });
+      const res = await request(app).post('/api/comandas/1/solicitar-cuenta').set('Authorization', GARZON());
+      expect(res.status).toBe(409);
+    });
+  });
+
   it('403 un garzón no puede anular una comanda', async () => {
     const res = await request(app).post('/api/comandas/1/anular').set('Authorization', GARZON());
     expect(res.status).toBe(403);

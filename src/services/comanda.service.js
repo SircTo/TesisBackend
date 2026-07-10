@@ -237,4 +237,19 @@ async function anular(id, actorId) {
   return obtener(id);
 }
 
-module.exports = { obtener, listar, crear, agregarItem, eliminarItem, actualizar, cambiarEstado, anular };
+// Solicitar la cuenta (RF_04): marca la mesa como "pagando" para una comanda entregada.
+async function solicitarCuenta(id, actorId) {
+  const comanda = await comandaModel.buscarPorId(id);
+  if (!comanda) throw new ApiError(404, 'Comanda no encontrada.');
+  if (comanda.estado !== 'entregada') {
+    throw new ApiError(409, 'Solo se puede solicitar la cuenta de una comanda entregada.');
+  }
+  await mesaModel.cambiarEstado(comanda.mesa_id, 'pagando');
+  await trazabilidad.registrar({
+    usuarioId: actorId, accion: 'solicitar_cuenta', entidad: 'comandas', entidadId: id,
+    detalle: `Solicitó la cuenta de la comanda #${id}`,
+  });
+  return obtener(id);
+}
+
+module.exports = { obtener, listar, crear, agregarItem, eliminarItem, actualizar, cambiarEstado, anular, solicitarCuenta };

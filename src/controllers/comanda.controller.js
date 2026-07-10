@@ -62,4 +62,10 @@ const anular = asyncHandler(async (req, res) => {
   res.json(comanda);
 });
 
-module.exports = { listar, obtener, crear, agregarItem, eliminarItem, actualizar, cambiarEstado, anular };
+// POST /api/comandas/:id/solicitar-cuenta
+const solicitarCuenta = asyncHandler(async (req, res) => {
+  const comanda = await comandaService.solicitarCuenta(Number(req.params.id), req.user.id);
+  res.json(comanda);
+});
+
+module.exports = { listar, obtener, crear, agregarItem, eliminarItem, actualizar, cambiarEstado, anular, solicitarCuenta };

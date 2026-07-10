@@ -26,4 +26,7 @@ router.post('/:id/items', authorize('garzon', 'jefe_cocina', 'administrador'), c
 router.put('/:id', authorize('administrador'), ctrl.actualizar);
 router.post('/:id/anular', authorize('administrador'), ctrl.anular);
 
+// Solicitar la cuenta (mesa -> pagando): garzón y administrador (RF_04).
+router.post('/:id/solicitar-cuenta', authorize('garzon', 'administrador'), ctrl.solicitarCuenta);
+
 module.exports = router;
