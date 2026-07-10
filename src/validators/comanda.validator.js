@@ -52,4 +52,11 @@ function validarCambioEstado(body = {}) {
   return body.estado;
 }
 
-module.exports = { validarCrear, validarItem, validarActualizar, validarCambioEstado };
+function validarCantidadItem(body = {}) {
+  if (!esEnteroPositivo(body.cantidad)) {
+    throw new ApiError(400, 'cantidad debe ser un entero positivo.');
+  }
+  return body.cantidad;
+}
+
+module.exports = { validarCrear, validarItem, validarActualizar, validarCambioEstado, validarCantidadItem };

@@ -35,9 +35,27 @@ async function agregar({ comandaId, productoId, cantidad, precioUnitario, descue
   return rows[0];
 }
 
+async function buscarEnComandaPorProducto(comandaId, productoId, exec = query) {
+  const { rows } = await exec(
+    `SELECT id, comanda_id, producto_id, cantidad, precio_unitario, descuento_porcentaje, observaciones
+     FROM comanda_detalle WHERE comanda_id = $1 AND producto_id = $2`,
+    [comandaId, productoId]
+  );
+  return rows[0] || null;
+}
+
+async function actualizarCantidad(id, cantidad, exec = query) {
+  const { rows } = await exec(
+    `UPDATE comanda_detalle SET cantidad = $2 WHERE id = $1
+     RETURNING id, comanda_id, producto_id, cantidad, precio_unitario, descuento_porcentaje, observaciones`,
+    [id, cantidad]
+  );
+  return rows[0] || null;
+}
+
 async function eliminar(id, exec = query) {
   const { rowCount } = await exec(`DELETE FROM comanda_detalle WHERE id = $1`, [id]);
   return rowCount > 0;
 }
 
-module.exports = { listarPorComanda, buscarPorId, agregar, eliminar };
+module.exports = { listarPorComanda, buscarPorId, buscarEnComandaPorProducto, actualizarCantidad, agregar, eliminar };

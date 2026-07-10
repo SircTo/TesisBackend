@@ -21,6 +21,7 @@ router.delete('/:id/items/:itemId', authorize('garzon', 'administrador'), ctrl.e
 // Agregar productos: garzón, jefe de cocina y administrador
 // (jefe de cocina/admin pueden aplicar descuentos por producto, RF_15).
 router.post('/:id/items', authorize('garzon', 'jefe_cocina', 'administrador'), ctrl.agregarItem);
+router.patch('/:id/items/:itemId', authorize('garzon', 'administrador'), ctrl.actualizarCantidadItem);
 
 // Solo administrador: editar (RF_12) y anular (RF_13).
 router.put('/:id', authorize('administrador'), ctrl.actualizar);

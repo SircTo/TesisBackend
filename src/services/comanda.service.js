@@ -96,21 +96,51 @@ async function agregarItem(comandaId, datos, actorId) {
   if (!producto.disponibilidad || producto.estado !== 'activo') {
     throw new ApiError(409, 'El producto no está disponible.');
   }
-  if (producto.stock < datos.cantidad) {
+  // Una línea por producto: si ya está en la comanda, se suma la cantidad.
+  const existente = await detalleModel.buscarEnComandaPorProducto(comandaId, datos.productoId);
+  const cantidadTotal = (existente ? existente.cantidad : 0) + datos.cantidad;
+  if (producto.stock < cantidadTotal) {
     throw new ApiError(409, 'Stock insuficiente para el producto.');
   }
 
-  await detalleModel.agregar({
-    comandaId,
-    productoId: datos.productoId,
-    cantidad: datos.cantidad,
-    precioUnitario: producto.precio, // precio "foto"
-    descuentoPorcentaje: datos.descuentoPorcentaje,
-    observaciones: datos.observaciones,
-  });
+  if (existente) {
+    await detalleModel.actualizarCantidad(existente.id, cantidadTotal);
+  } else {
+    await detalleModel.agregar({
+      comandaId,
+      productoId: datos.productoId,
+      cantidad: datos.cantidad,
+      precioUnitario: producto.precio, // precio "foto"
+      descuentoPorcentaje: datos.descuentoPorcentaje,
+      observaciones: datos.observaciones,
+    });
+  }
   await trazabilidad.registrar({
     usuarioId: actorId, accion: 'agregar_item', entidad: 'comandas', entidadId: comandaId,
     detalle: `Agregó ${datos.cantidad}x "${producto.nombre}" a la comanda #${comandaId}`,
+  });
+  return obtener(comandaId);
+}
+
+// Fija la cantidad de un ítem (para los botones − / +). cantidad >= 1.
+async function actualizarCantidadItem(comandaId, itemId, cantidad, actorId) {
+  const comanda = await comandaModel.buscarPorId(comandaId);
+  if (!comanda) throw new ApiError(404, 'Comanda no encontrada.');
+  if (comanda.estado !== 'abierta') {
+    throw new ApiError(409, 'Solo se puede modificar una comanda abierta.');
+  }
+  const item = await detalleModel.buscarPorId(itemId);
+  if (!item || item.comanda_id !== comandaId) {
+    throw new ApiError(404, 'Ítem no encontrado en la comanda.');
+  }
+  const producto = await productoModel.buscarPorId(item.producto_id);
+  if (producto && producto.stock < cantidad) {
+    throw new ApiError(409, 'Stock insuficiente para el producto.');
+  }
+  await detalleModel.actualizarCantidad(itemId, cantidad);
+  await trazabilidad.registrar({
+    usuarioId: actorId, accion: 'modificar', entidad: 'comandas', entidadId: comandaId,
+    detalle: `Ajustó la cantidad de un ítem de la comanda #${comandaId} a ${cantidad}`,
   });
   return obtener(comandaId);
 }
@@ -252,4 +282,4 @@ async function solicitarCuenta(id, actorId) {
   return obtener(id);
 }
 
-module.exports = { obtener, listar, crear, agregarItem, eliminarItem, actualizar, cambiarEstado, anular, solicitarCuenta };
+module.exports = { obtener, listar, crear, agregarItem, actualizarCantidadItem, eliminarItem, actualizar, cambiarEstado, anular, solicitarCuenta };

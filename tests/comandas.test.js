@@ -102,6 +102,43 @@ describe('/api/comandas', () => {
     });
   });
 
+  describe('cantidad de ítems', () => {
+    it('201 suma la cantidad si el producto ya está en la comanda', async () => {
+      comandaModel.buscarPorId.mockResolvedValue({ id: 1, estado: 'abierta', descuento_tipo_cliente_porcentaje: null });
+      productoModel.buscarPorId.mockResolvedValue({ id: 1, nombre: 'Café', precio: 1000, stock: 10, disponibilidad: true, estado: 'activo' });
+      detalleModel.buscarEnComandaPorProducto.mockResolvedValue({ id: 5, producto_id: 1, cantidad: 2 });
+      detalleModel.listarPorComanda.mockResolvedValue([]);
+      const res = await request(app)
+        .post('/api/comandas/1/items')
+        .set('Authorization', GARZON())
+        .send({ producto_id: 1, cantidad: 1 });
+      expect(res.status).toBe(201);
+      expect(detalleModel.actualizarCantidad).toHaveBeenCalledWith(5, 3);
+    });
+
+    it('200 cambia la cantidad de un ítem (PATCH)', async () => {
+      comandaModel.buscarPorId.mockResolvedValue({ id: 1, estado: 'abierta', descuento_tipo_cliente_porcentaje: null });
+      detalleModel.buscarPorId.mockResolvedValue({ id: 5, comanda_id: 1, producto_id: 1 });
+      productoModel.buscarPorId.mockResolvedValue({ id: 1, stock: 10 });
+      detalleModel.listarPorComanda.mockResolvedValue([]);
+      const res = await request(app)
+        .patch('/api/comandas/1/items/5')
+        .set('Authorization', GARZON())
+        .send({ cantidad: 4 });
+      expect(res.status).toBe(200);
+      expect(detalleModel.actualizarCantidad).toHaveBeenCalledWith(5, 4);
+    });
+
+    it('409 al cambiar la cantidad si la comanda no está abierta', async () => {
+      comandaModel.buscarPorId.mockResolvedValue({ id: 1, estado: 'entregada' });
+      const res = await request(app)
+        .patch('/api/comandas/1/items/5')
+        .set('Authorization', GARZON())
+        .send({ cantidad: 4 });
+      expect(res.status).toBe(409);
+    });
+  });
+
   describe('cambio de estado', () => {
     it('409 ante una transición no permitida (abierta → entregada)', async () => {
       comandaModel.buscarPorId.mockResolvedValue({ id: 1, estado: 'abierta' });

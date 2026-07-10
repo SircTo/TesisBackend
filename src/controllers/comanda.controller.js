@@ -6,6 +6,7 @@ const {
   validarItem,
   validarActualizar,
   validarCambioEstado,
+  validarCantidadItem,
 } = require('../validators/comanda.validator');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -34,6 +35,18 @@ const agregarItem = asyncHandler(async (req, res) => {
   const datos = validarItem(req.body);
   const comanda = await comandaService.agregarItem(Number(req.params.id), datos, req.user.id);
   res.status(201).json(comanda);
+});
+
+// PATCH /api/comandas/:id/items/:itemId  (cambiar cantidad)
+const actualizarCantidadItem = asyncHandler(async (req, res) => {
+  const cantidad = validarCantidadItem(req.body);
+  const comanda = await comandaService.actualizarCantidadItem(
+    Number(req.params.id),
+    Number(req.params.itemId),
+    cantidad,
+    req.user.id
+  );
+  res.json(comanda);
 });
 
 // DELETE /api/comandas/:id/items/:itemId
@@ -68,4 +81,4 @@ const solicitarCuenta = asyncHandler(async (req, res) => {
   res.json(comanda);
 });
 
-module.exports = { listar, obtener, crear, agregarItem, eliminarItem, actualizar, cambiarEstado, anular, solicitarCuenta };
+module.exports = { listar, obtener, crear, agregarItem, actualizarCantidadItem, eliminarItem, actualizar, cambiarEstado, anular, solicitarCuenta };
