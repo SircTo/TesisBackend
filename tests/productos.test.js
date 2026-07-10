@@ -99,4 +99,36 @@ describe('/api/productos', () => {
       expect(res.status).toBe(400);
     });
   });
+
+  describe('POST /revision (revisión de inventario)', () => {
+    it('200 corrige los productos con diferencia', async () => {
+      productoModel.buscarPorId.mockResolvedValue({ id: 1, nombre: 'Café', stock: 8, stock_minimo: 2 });
+      productoModel.ajustarStock.mockResolvedValue({ id: 1, nombre: 'Café', stock: 5, stock_minimo: 2 });
+      avisoModel.buscarPendiente.mockResolvedValue(null);
+      const res = await request(app)
+        .post('/api/productos/revision')
+        .set('Authorization', COCINA())
+        .send({ items: [{ producto_id: 1, stock_real: 5 }] });
+      expect(res.status).toBe(200);
+      expect(res.body.corregidos).toBe(1);
+    });
+
+    it('200 sin cambios cuando el stock coincide', async () => {
+      productoModel.buscarPorId.mockResolvedValue({ id: 1, nombre: 'Café', stock: 8, stock_minimo: 2 });
+      const res = await request(app)
+        .post('/api/productos/revision')
+        .set('Authorization', COCINA())
+        .send({ items: [{ producto_id: 1, stock_real: 8 }] });
+      expect(res.status).toBe(200);
+      expect(res.body.corregidos).toBe(0);
+    });
+
+    it('403 un garzón no puede revisar inventario', async () => {
+      const res = await request(app)
+        .post('/api/productos/revision')
+        .set('Authorization', GARZON())
+        .send({ items: [{ producto_id: 1, stock_real: 5 }] });
+      expect(res.status).toBe(403);
+    });
+  });
 });

@@ -109,4 +109,22 @@ function validarFiltros(query = {}) {
   return f;
 }
 
-module.exports = { validarCrear, validarActualizar, validarAjusteStock, validarFiltros };
+// Revisión de inventario: lista de { producto_id, stock_real }.
+function validarRevision(body = {}) {
+  if (!Array.isArray(body.items) || body.items.length === 0) {
+    throw new ApiError(400, 'Debe incluir al menos un producto en la revisión.');
+  }
+  const items = body.items.map((it, i) => {
+    if (!it || typeof it !== 'object') throw new ApiError(400, `El ítem ${i + 1} es inválido.`);
+    if (!esEnteroPositivo(it.producto_id)) {
+      throw new ApiError(400, `producto_id del ítem ${i + 1} debe ser un entero positivo.`);
+    }
+    if (!esEnteroNoNegativo(it.stock_real)) {
+      throw new ApiError(400, `stock_real del ítem ${i + 1} debe ser un entero mayor o igual a 0.`);
+    }
+    return { productoId: it.producto_id, stockReal: it.stock_real };
+  });
+  return items;
+}
+
+module.exports = { validarCrear, validarActualizar, validarAjusteStock, validarFiltros, validarRevision };

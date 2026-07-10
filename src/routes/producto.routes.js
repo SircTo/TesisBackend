@@ -21,4 +21,7 @@ router.put('/:id', authorize('jefe_cocina', 'administrador'), ctrl.actualizar);
 // Ajuste de stock: jefe de cocina y administrador (RF_17).
 router.post('/:id/stock', authorize('jefe_cocina', 'administrador'), ctrl.ajustarStock);
 
+// Revisión de inventario (corrección por lotes): jefe de cocina y administrador.
+router.post('/revision', authorize('jefe_cocina', 'administrador'), ctrl.revisar);
+
 module.exports = router;

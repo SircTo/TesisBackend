@@ -107,4 +107,38 @@ async function historialStock(id) {
   return movimientoModel.listarPorProducto(id);
 }
 
-module.exports = { listar, obtener, crear, actualizar, ajustarStock, historialStock };
+/**
+ * Revisión de inventario: recibe el stock real contado por producto y corrige
+ * las diferencias en una sola transacción, registrando cada movimiento y su
+ * responsable. Los productos con stock correcto no generan movimiento.
+ */
+async function revisarInventario(items, actorId) {
+  const afectados = [];
+  await withTransaction(async (client) => {
+    const exec = (text, params) => client.query(text, params);
+    for (const it of items) {
+      const producto = await productoModel.buscarPorId(it.productoId);
+      if (!producto) throw new ApiError(404, `El producto ${it.productoId} no existe.`);
+      const delta = it.stockReal - producto.stock;
+      if (delta === 0) continue; // stock correcto: sin cambios
+      const actualizado = await productoModel.ajustarStock(it.productoId, delta, exec);
+      if (!actualizado) throw new ApiError(400, `El stock corregido de "${producto.nombre}" no puede ser negativo.`);
+      await movimientoModel.registrar(
+        { productoId: it.productoId, usuarioId: actorId, tipo: 'ajuste', cantidad: delta, motivo: 'Revisión de inventario' },
+        exec
+      );
+      afectados.push(actualizado);
+    }
+  });
+
+  for (const p of afectados) await avisoService.evaluar(p);
+  if (afectados.length > 0) {
+    await trazabilidad.registrar({
+      usuarioId: actorId, accion: 'revisar_inventario', entidad: 'productos', entidadId: null,
+      detalle: `Revisión de inventario: ${afectados.length} producto(s) corregido(s)`,
+    });
+  }
+  return { corregidos: afectados.length };
+}
+
+module.exports = { listar, obtener, crear, actualizar, ajustarStock, historialStock, revisarInventario };

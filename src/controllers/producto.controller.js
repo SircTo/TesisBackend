@@ -6,6 +6,7 @@ const {
   validarActualizar,
   validarAjusteStock,
   validarFiltros,
+  validarRevision,
 } = require('../validators/producto.validator');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -46,4 +47,11 @@ const historialStock = asyncHandler(async (req, res) => {
   res.json(await productoService.historialStock(Number(req.params.id)));
 });
 
-module.exports = { listar, obtener, crear, actualizar, ajustarStock, historialStock };
+// POST /api/productos/revision  (revisión de inventario, RF de auditoría de stock)
+const revisar = asyncHandler(async (req, res) => {
+  const items = validarRevision(req.body);
+  const resultado = await productoService.revisarInventario(items, req.user.id);
+  res.json(resultado);
+});
+
+module.exports = { listar, obtener, crear, actualizar, ajustarStock, historialStock, revisar };
