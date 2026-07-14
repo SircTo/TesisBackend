@@ -2,8 +2,8 @@
 
 const { query } = require('../config/db');
 
-// Reporte de ventas con filtros (RF_22, IS_04).
-async function ventas({ desde, hasta, productoId, usuarioId } = {}) {
+// Reporte de ventas con filtros y paginación (RF_22, IS_04).
+async function ventas({ desde, hasta, productoId, usuarioId, page = 1, pageSize = 20 } = {}) {
   const cond = [];
   const params = [];
   if (desde) { params.push(desde); cond.push(`v.created_at >= $${params.length}`); }
@@ -14,6 +14,14 @@ async function ventas({ desde, hasta, productoId, usuarioId } = {}) {
     cond.push(`EXISTS (SELECT 1 FROM comanda_detalle cd WHERE cd.comanda_id = v.comanda_id AND cd.producto_id = $${params.length})`);
   }
   const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
+
+  const { rows: cRows } = await query(`SELECT COUNT(*)::int AS total FROM ventas v ${where}`, params);
+  const total = cRows[0].total;
+
+  params.push(pageSize);
+  const pLimit = params.length;
+  params.push((page - 1) * pageSize);
+  const pOffset = params.length;
   const { rows } = await query(
     `SELECT v.id, v.created_at AS fecha, c.mesa_id, m.numero AS mesa_numero,
             u.nombre AS usuario, tc.nombre AS tipo_cliente,
@@ -25,10 +33,11 @@ async function ventas({ desde, hasta, productoId, usuarioId } = {}) {
      JOIN usuarios u ON u.id = v.usuario_id
      LEFT JOIN tipos_cliente tc ON tc.id = c.tipo_cliente_id
      ${where}
-     ORDER BY v.created_at DESC`,
+     ORDER BY v.created_at DESC
+     LIMIT $${pLimit} OFFSET $${pOffset}`,
     params
   );
-  return rows;
+  return { data: rows, total };
 }
 
 // Productos más vendidos (RF_23, IS_05). Solo cuenta comandas efectivamente vendidas.
@@ -86,41 +95,58 @@ async function ingresos({ desde, hasta } = {}) {
   return { resumen: resumenRows[0], por_tipo_pago: porTipoPago };
 }
 
-// Stock actual de productos activos (RF_23, IS_03).
-async function stockActual({ area, soloBajoMinimo } = {}) {
+// Stock actual de productos activos, paginado (RF_23, IS_03).
+async function stockActual({ area, soloBajoMinimo, page = 1, pageSize = 20 } = {}) {
   const cond = [`p.estado = 'activo'`];
   const params = [];
   if (area) { params.push(area); cond.push(`p.area = $${params.length}`); }
   if (soloBajoMinimo) cond.push(`p.stock <= p.stock_minimo`);
+  const where = `WHERE ${cond.join(' AND ')}`;
+
+  const { rows: cRows } = await query(`SELECT COUNT(*)::int AS total FROM productos p ${where}`, params);
+  const total = cRows[0].total;
+
+  params.push(pageSize);
+  const pLimit = params.length;
+  params.push((page - 1) * pageSize);
+  const pOffset = params.length;
   const { rows } = await query(
     `SELECT p.id, p.nombre, cat.nombre AS categoria, p.stock, p.stock_minimo,
             p.disponibilidad, p.area, (p.stock <= p.stock_minimo) AS bajo_minimo
      FROM productos p LEFT JOIN categorias cat ON cat.id = p.categoria_id
-     WHERE ${cond.join(' AND ')}
-     ORDER BY p.nombre`,
+     ${where}
+     ORDER BY p.nombre
+     LIMIT $${pLimit} OFFSET $${pOffset}`,
     params
   );
-  return rows;
+  return { data: rows, total };
 }
 
-// Historial de movimientos/acciones por usuario (RF_23, RF_24, IS_06).
-async function movimientos({ usuarioId, desde, hasta, limite = 200 } = {}) {
+// Historial de movimientos/acciones por usuario, paginado (RF_23, RF_24, IS_06).
+async function movimientos({ usuarioId, desde, hasta, page = 1, pageSize = 20 } = {}) {
   const cond = [];
   const params = [];
   if (usuarioId) { params.push(usuarioId); cond.push(`t.usuario_id = $${params.length}`); }
   if (desde) { params.push(desde); cond.push(`t.created_at >= $${params.length}`); }
   if (hasta) { params.push(hasta); cond.push(`t.created_at <= $${params.length}`); }
   const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
-  params.push(limite);
+
+  const { rows: cRows } = await query(`SELECT COUNT(*)::int AS total FROM trazabilidad t ${where}`, params);
+  const total = cRows[0].total;
+
+  params.push(pageSize);
+  const pLimit = params.length;
+  params.push((page - 1) * pageSize);
+  const pOffset = params.length;
   const { rows } = await query(
     `SELECT t.id, t.usuario_id, u.nombre AS usuario, t.accion, t.entidad, t.entidad_id, t.detalle, t.created_at
      FROM trazabilidad t LEFT JOIN usuarios u ON u.id = t.usuario_id
      ${where}
      ORDER BY t.id DESC
-     LIMIT $${params.length}`,
+     LIMIT $${pLimit} OFFSET $${pOffset}`,
     params
   );
-  return rows;
+  return { data: rows, total };
 }
 
 module.exports = { ventas, productosMasVendidos, ingresos, stockActual, movimientos };

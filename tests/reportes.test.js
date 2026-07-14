@@ -24,11 +24,12 @@ describe('/api/reportes', () => {
     expect(res.status).toBe(403);
   });
 
-  it('200 reporte de ventas', async () => {
-    reporteModel.ventas.mockResolvedValue([{ id: 1, total: 5000, tipos_pago: 'efectivo' }]);
-    const res = await request(app).get('/api/reportes/ventas').set('Authorization', ADMIN());
+  it('200 reporte de ventas paginado', async () => {
+    reporteModel.ventas.mockResolvedValue({ data: [{ id: 1, total: 5000, tipos_pago: 'efectivo' }], total: 1 });
+    const res = await request(app).get('/api/reportes/ventas?page=1&pageSize=20').set('Authorization', ADMIN());
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(1);
+    expect(res.body).toMatchObject({ total: 1, page: 1, pageSize: 20 });
+    expect(res.body.data).toHaveLength(1);
   });
 
   it('400 si un filtro de fecha es inválido', async () => {
@@ -59,17 +60,17 @@ describe('/api/reportes', () => {
     expect(res.body.por_tipo_pago).toHaveLength(2);
   });
 
-  it('200 stock actual', async () => {
-    reporteModel.stockActual.mockResolvedValue([{ id: 1, nombre: 'Café', stock: 3, stock_minimo: 5, bajo_minimo: true }]);
+  it('200 stock actual paginado', async () => {
+    reporteModel.stockActual.mockResolvedValue({ data: [{ id: 1, nombre: 'Café', stock: 3, stock_minimo: 5, bajo_minimo: true }], total: 1 });
     const res = await request(app).get('/api/reportes/stock?bajo_minimo=true').set('Authorization', ADMIN());
     expect(res.status).toBe(200);
-    expect(res.body[0].bajo_minimo).toBe(true);
+    expect(res.body.data[0].bajo_minimo).toBe(true);
   });
 
-  it('200 movimientos (trazabilidad)', async () => {
-    reporteModel.movimientos.mockResolvedValue([{ id: 1, usuario: 'Admin', accion: 'crear', entidad: 'productos' }]);
+  it('200 movimientos (trazabilidad) paginado', async () => {
+    reporteModel.movimientos.mockResolvedValue({ data: [{ id: 1, usuario: 'Admin', accion: 'crear', entidad: 'productos' }], total: 1 });
     const res = await request(app).get('/api/reportes/movimientos?usuario_id=1').set('Authorization', ADMIN());
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(1);
+    expect(res.body.data).toHaveLength(1);
   });
 });

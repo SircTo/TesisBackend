@@ -31,12 +31,19 @@ function parseLimite(valor, porDefecto) {
   return n;
 }
 
+function parsePaginacion(q = {}) {
+  const page = Math.max(1, parseInt(q.page, 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(q.pageSize, 10) || 20));
+  return { page, pageSize };
+}
+
 function validarFiltrosVentas(q = {}) {
   return {
     desde: parseFecha(q.desde, 'desde'),
     hasta: parseFecha(q.hasta, 'hasta', true),
     productoId: parseIdOpcional(q.producto_id, 'producto_id'),
     usuarioId: parseIdOpcional(q.usuario_id, 'usuario_id'),
+    ...parsePaginacion(q),
   };
 }
 
@@ -53,7 +60,7 @@ function validarFiltrosMovimientos(q = {}) {
     usuarioId: parseIdOpcional(q.usuario_id, 'usuario_id'),
     desde: parseFecha(q.desde, 'desde'),
     hasta: parseFecha(q.hasta, 'hasta', true),
-    limite: parseLimite(q.limite, 200),
+    ...parsePaginacion(q),
   };
 }
 
@@ -63,7 +70,7 @@ function validarFiltrosStock(q = {}) {
     if (!AREAS.includes(q.area)) throw new ApiError(400, `area debe ser una de: ${AREAS.join(', ')}.`);
     area = q.area;
   }
-  return { area, soloBajoMinimo: q.bajo_minimo === 'true' };
+  return { area, soloBajoMinimo: q.bajo_minimo === 'true', ...parsePaginacion(q) };
 }
 
 module.exports = {
