@@ -20,9 +20,26 @@ async function buscarPorId(id) {
   return rows[0] || null;
 }
 
-async function listar() {
-  const { rows } = await query(`SELECT ${CAMPOS} FROM ventas ORDER BY id DESC`);
+// Lista una página de ventas, opcionalmente filtrada por mes ('YYYY-MM').
+async function listar({ mes = null, limit = 20, offset = 0 } = {}) {
+  const { rows } = await query(
+    `SELECT ${CAMPOS} FROM ventas
+     WHERE ($1::text IS NULL OR to_char(created_at, 'YYYY-MM') = $1)
+     ORDER BY created_at DESC, id DESC
+     LIMIT $2 OFFSET $3`,
+    [mes, limit, offset]
+  );
   return rows;
 }
 
-module.exports = { crear, buscarPorId, listar };
+// Cuenta el total de ventas (con el mismo filtro), para calcular las páginas.
+async function contar({ mes = null } = {}) {
+  const { rows } = await query(
+    `SELECT COUNT(*)::int AS total FROM ventas
+     WHERE ($1::text IS NULL OR to_char(created_at, 'YYYY-MM') = $1)`,
+    [mes]
+  );
+  return rows[0].total;
+}
+
+module.exports = { crear, buscarPorId, listar, contar };

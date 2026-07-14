@@ -47,6 +47,25 @@ describe('/api/ventas', () => {
     expect(res.status).toBe(403);
   });
 
+  it('200 lista ventas paginadas filtrando por mes', async () => {
+    ventaModel.listar.mockResolvedValue([{ id: 3, comanda_id: 3, total: 5000, created_at: '2026-07-01T12:00:00Z' }]);
+    ventaModel.contar.mockResolvedValue(1);
+    const res = await request(app).get('/api/ventas?mes=2026-07&page=2&pageSize=10').set('Authorization', ADMIN());
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ total: 1, page: 2, pageSize: 10 });
+    expect(res.body.data).toHaveLength(1);
+    expect(ventaModel.listar).toHaveBeenCalledWith({ mes: '2026-07', limit: 10, offset: 10 });
+    expect(ventaModel.contar).toHaveBeenCalledWith({ mes: '2026-07' });
+  });
+
+  it('200 ignora un mes con formato inválido (lo trata como sin filtro)', async () => {
+    ventaModel.listar.mockResolvedValue([]);
+    ventaModel.contar.mockResolvedValue(0);
+    const res = await request(app).get('/api/ventas?mes=julio').set('Authorization', ADMIN());
+    expect(res.status).toBe(200);
+    expect(ventaModel.listar).toHaveBeenCalledWith({ mes: null, limit: 20, offset: 0 });
+  });
+
   it('400 al cobrar sin pagos', async () => {
     const res = await request(app).post('/api/ventas').set('Authorization', GARZON()).send({ comanda_id: 1 });
     expect(res.status).toBe(400);

@@ -3,6 +3,7 @@
 const { withTransaction } = require('../config/db');
 const ventaModel = require('../models/venta.model');
 const pagoModel = require('../models/pago.model');
+const detalleModel = require('../models/comandaDetalle.model');
 const comandaModel = require('../models/comanda.model');
 const mesaModel = require('../models/mesa.model');
 const comandaService = require('./comanda.service');
@@ -15,11 +16,19 @@ async function obtener(id) {
   const venta = await ventaModel.buscarPorId(id);
   if (!venta) throw new ApiError(404, 'Venta no encontrada.');
   const pagos = await pagoModel.listarPorVenta(id);
-  return { ...venta, pagos };
+  const items = await detalleModel.listarPorComanda(venta.comanda_id);
+  return { ...venta, pagos, items };
 }
 
-async function listar() {
-  return ventaModel.listar();
+// Página de ventas del lado del servidor (cada página consulta solo su porción).
+async function listar({ mes = null, page = 1, pageSize = 20 } = {}) {
+  const limit = pageSize;
+  const offset = (page - 1) * pageSize;
+  const [data, total] = await Promise.all([
+    ventaModel.listar({ mes, limit, offset }),
+    ventaModel.contar({ mes }),
+  ]);
+  return { data, total, page, pageSize };
 }
 
 /**
