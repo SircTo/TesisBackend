@@ -33,6 +33,24 @@ describe('/api/productos', () => {
     expect(res.status).toBe(401);
   });
 
+  it('200 lista el arreglo completo cuando no se pide paginación (uso de catálogos)', async () => {
+    productoModel.listar.mockResolvedValue([{ id: 1, nombre: 'Café' }]);
+    const res = await request(app).get('/api/productos').set('Authorization', GARZON());
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(productoModel.listar).toHaveBeenCalledWith({});
+  });
+
+  it('200 pagina y filtra por nombre cuando se envían page/pageSize', async () => {
+    productoModel.listar.mockResolvedValue({ data: [{ id: 1, nombre: 'Café' }], total: 1, page: 1, pageSize: 20 });
+    const res = await request(app)
+      .get('/api/productos?page=1&pageSize=20&nombre=caf')
+      .set('Authorization', GARZON());
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ total: 1, page: 1, pageSize: 20 });
+    expect(productoModel.listar).toHaveBeenCalledWith({ nombre: 'caf', page: 1, pageSize: 20 });
+  });
+
   it('403 un garzón no puede crear productos', async () => {
     const res = await request(app)
       .post('/api/productos')

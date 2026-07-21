@@ -106,6 +106,16 @@ function validarFiltros(query = {}) {
     if (!ESTADOS.includes(query.estado)) throw new ApiError(400, `El estado debe ser uno de: ${ESTADOS.join(', ')}.`);
     f.estado = query.estado;
   }
+  if (query.nombre !== undefined) {
+    const nombre = String(query.nombre).trim();
+    if (nombre) f.nombre = nombre;
+  }
+  // La paginación es opcional: solo se activa si se envía "page" (catálogos/selects
+  // que necesitan la lista completa para filtrar en el cliente no la envían).
+  if (query.page !== undefined) {
+    f.page = Math.max(1, parseInt(query.page, 10) || 1);
+    f.pageSize = Math.min(100, Math.max(1, parseInt(query.pageSize, 10) || 20));
+  }
   return f;
 }
 

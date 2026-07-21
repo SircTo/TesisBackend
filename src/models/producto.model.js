@@ -6,7 +6,9 @@ const CAMPOS =
   'id, nombre, categoria_id, precio, stock, stock_minimo, disponibilidad, area, estado, created_at';
 
 /**
- * Lista productos con filtros opcionales (categoriaId, area, disponibilidad, estado).
+ * Lista productos con filtros opcionales (categoriaId, area, disponibilidad, estado, nombre).
+ * Si vienen page/pageSize, pagina en el servidor y devuelve { data, total, page, pageSize };
+ * si no, devuelve el arreglo completo (uso de catálogos/selects que necesitan todo para filtrar en el cliente).
  */
 async function listar(filtros = {}) {
   const cond = [];
@@ -27,7 +29,26 @@ async function listar(filtros = {}) {
     params.push(filtros.estado);
     cond.push(`estado = $${params.length}`);
   }
+  if (filtros.nombre) {
+    params.push(`%${filtros.nombre}%`);
+    cond.push(`nombre ILIKE $${params.length}`);
+  }
   const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
+
+  if (filtros.page) {
+    const { rows: cRows } = await query(`SELECT COUNT(*)::int AS total FROM productos ${where}`, params);
+    const total = cRows[0].total;
+    params.push(filtros.pageSize);
+    const pLimit = params.length;
+    params.push((filtros.page - 1) * filtros.pageSize);
+    const pOffset = params.length;
+    const { rows } = await query(
+      `SELECT ${CAMPOS} FROM productos ${where} ORDER BY nombre LIMIT $${pLimit} OFFSET $${pOffset}`,
+      params
+    );
+    return { data: rows, total, page: filtros.page, pageSize: filtros.pageSize };
+  }
+
   const { rows } = await query(`SELECT ${CAMPOS} FROM productos ${where} ORDER BY id`, params);
   return rows;
 }
