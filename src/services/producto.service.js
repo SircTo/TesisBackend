@@ -102,9 +102,9 @@ async function ajustarStock(id, { cantidad, motivo }, actorId) {
   return producto;
 }
 
-async function historialStock(id) {
+async function historialStock(id, paginacion) {
   await obtener(id);
-  return movimientoModel.listarPorProducto(id);
+  return movimientoModel.listarPorProducto(id, paginacion);
 }
 
 /**

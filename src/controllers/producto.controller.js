@@ -42,9 +42,11 @@ const ajustarStock = asyncHandler(async (req, res) => {
   res.json(producto);
 });
 
-// GET /api/productos/:id/movimientos
+// GET /api/productos/:id/movimientos?page=&pageSize=
 const historialStock = asyncHandler(async (req, res) => {
-  res.json(await productoService.historialStock(Number(req.params.id)));
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 20));
+  res.json(await productoService.historialStock(Number(req.params.id), { page, pageSize }));
 });
 
 // POST /api/productos/revision  (revisión de inventario, RF de auditoría de stock)

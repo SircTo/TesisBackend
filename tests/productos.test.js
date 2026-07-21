@@ -18,6 +18,7 @@ jest.mock('../src/models/trazabilidad.model');
 const productoModel = require('../src/models/producto.model');
 const categoriaModel = require('../src/models/categoria.model');
 const avisoModel = require('../src/models/avisoStock.model');
+const movimientoModel = require('../src/models/movimientoStock.model');
 
 const app = require('../src/app');
 const { tokenPara } = require('./helpers');
@@ -147,6 +148,38 @@ describe('/api/productos', () => {
         .set('Authorization', GARZON())
         .send({ items: [{ producto_id: 1, stock_real: 5 }] });
       expect(res.status).toBe(403);
+    });
+  });
+
+  describe('GET /:id/movimientos (historial de stock, paginado)', () => {
+    it('200 devuelve el historial paginado con valores por defecto', async () => {
+      productoModel.buscarPorId.mockResolvedValue({ id: 1, nombre: 'Café' });
+      movimientoModel.listarPorProducto.mockResolvedValue({
+        data: [{ id: 1, tipo: 'ajuste', cantidad: 5, usuario: 'Admin' }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+      });
+      const res = await request(app).get('/api/productos/1/movimientos').set('Authorization', GARZON());
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ total: 1, page: 1, pageSize: 20 });
+      expect(movimientoModel.listarPorProducto).toHaveBeenCalledWith(1, { page: 1, pageSize: 20 });
+    });
+
+    it('200 respeta page/pageSize enviados', async () => {
+      productoModel.buscarPorId.mockResolvedValue({ id: 1, nombre: 'Café' });
+      movimientoModel.listarPorProducto.mockResolvedValue({ data: [], total: 0, page: 2, pageSize: 10 });
+      const res = await request(app)
+        .get('/api/productos/1/movimientos?page=2&pageSize=10')
+        .set('Authorization', GARZON());
+      expect(res.status).toBe(200);
+      expect(movimientoModel.listarPorProducto).toHaveBeenCalledWith(1, { page: 2, pageSize: 10 });
+    });
+
+    it('404 si el producto no existe', async () => {
+      productoModel.buscarPorId.mockResolvedValue(null);
+      const res = await request(app).get('/api/productos/999/movimientos').set('Authorization', GARZON());
+      expect(res.status).toBe(404);
     });
   });
 });
