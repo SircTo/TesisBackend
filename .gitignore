@@ -27,5 +27,6 @@ tmp/
 # Serena (herramienta de asistencia; no publicar en GitHub)
 /.serena/
 
-# Worktrees de desarrollo aislado
-/.worktrees/
+# Worktrees de desarrollo aislado (sin punto: Jest excluye directorios ocultos
+# de sus patrones de test, así que .worktrees/ rompe el testMatch).
+/worktrees/
