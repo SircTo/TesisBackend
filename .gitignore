@@ -26,3 +26,6 @@ tmp/
 
 # Serena (herramienta de asistencia; no publicar en GitHub)
 /.serena/
+
+# Worktrees de desarrollo aislado
+/.worktrees/
